@@ -1,3 +1,5 @@
 export * from './errors/custom.error'
 export * from './dtos/auth/auth.dto'
+export * from './dtos/categories/categories.dto'
+export * from './dtos/shared/pagination.dto'
 export * from './entities/user.entity'

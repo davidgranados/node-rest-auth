@@ -11,4 +11,5 @@ export const envs = {
   MAILER_EMAIL: get('MAILER_EMAIL').required().asEmailString(),
   MAILER_SECRET_KEY: get('MAILER_SECRET_KEY').required().asString(),
   HOST: get('HOST').required().asString(),
+  SEND_EMAIL: get('SEND_EMAIL').required().asBool(),
 };

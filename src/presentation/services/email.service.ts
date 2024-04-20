@@ -13,9 +13,14 @@ interface SendMailOptions {
 }
 
 export class EmailService {
-  private transporter: Transporter
+  private transporter: Transporter;
 
-  constructor(mailerService: string, mailerEmail: string, mailerSecretKey: string) {
+  constructor(
+    mailerService: string,
+    mailerEmail: string,
+    mailerSecretKey: string,
+    private readonly postToProvider: boolean
+  ) {
     this.transporter = nodemailer.createTransport({
       service: mailerService,
       auth: {
@@ -26,6 +31,10 @@ export class EmailService {
   }
 
   async sendEmail(options: SendMailOptions) {
+    if (!this.postToProvider) {
+      return true;
+    }
+
     const mailOptions = {
       to: options.to,
       subject: options.subject,

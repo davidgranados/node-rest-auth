@@ -55,14 +55,14 @@ export class AuthService {
 
       await this.sendEmailValidationLink(user.email);
 
-      const { password: _, ...useEntity } = UserEntity.fromObject(user);
+      const { password: _, ...userEntity } = UserEntity.fromObject(user);
       const token = await this.jwtAdapter.sign({ id: user.id });
 
       if (!token) {
         throw CustomError.internal("Internal server error");
       }
       return {
-        user: useEntity,
+        user: userEntity,
         token,
       };
     } catch (error) {
@@ -80,7 +80,7 @@ export class AuthService {
     if (!passwordMatch) {
       throw CustomError.badRequest("invalid email or password");
     }
-    const { password: _, ...useEntity } = UserEntity.fromObject(user);
+    const { password: _, ...userEntity } = UserEntity.fromObject(user);
     const token = await this.jwtAdapter.sign({ id: user.id });
 
     if (!token) {
@@ -88,18 +88,18 @@ export class AuthService {
     }
 
     return {
-      user: useEntity,
+      user: userEntity,
       token,
     };
   }
 
   public validateEmail = async (token: string) => {
-    const jwtPayload = this.jwtAdapter.verify(token);
+    const jwtPayload = this.jwtAdapter.verify<{ email: string }>(token);
     if (!jwtPayload) {
       throw CustomError.badRequest("Invalid token");
     }
 
-    if (typeof jwtPayload === 'string') {
+    if (typeof jwtPayload === "string") {
       throw CustomError.badRequest("Invalid token");
     }
 
@@ -117,7 +117,7 @@ export class AuthService {
     user.emailValidated = true;
     await user.save();
 
-    const { password: _, ...useEntity } = UserEntity.fromObject(user);
+    const { password: _, ...userEntity } = UserEntity.fromObject(user);
     const newToken = await this.jwtAdapter.sign({ id: user.id });
 
     if (!newToken) {
@@ -125,7 +125,7 @@ export class AuthService {
     }
 
     return {
-      user: useEntity,
+      user: userEntity,
       token: newToken,
     };
   };

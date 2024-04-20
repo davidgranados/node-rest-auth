@@ -6,7 +6,12 @@ export class AuthRoutes {
   static get routes(): Router {
     const router = Router();
     const jwtAdapter = new JwtAdapter(envs.JWT_SECRET, envs.JWT_EXPIRES_IN);
-    const emailService = new EmailService(envs.MAILER_SERVICE, envs.MAILER_EMAIL, envs.MAILER_SECRET_KEY);
+    const emailService = new EmailService(
+      envs.MAILER_SERVICE,
+      envs.MAILER_EMAIL,
+      envs.MAILER_SECRET_KEY,
+      envs.SEND_EMAIL
+    );
     const authService = new AuthService(jwtAdapter, emailService);
     const controller = new AuthController(authService);
 

@@ -22,7 +22,8 @@ export class JwtAdapter {
     });
   }
 
-  public verify(token: string) {
-    return jwt.verify(token, this.secret);
+  public verify<TPayload>(token: string): TPayload | string{
+    return jwt.verify(token, this.secret) as TPayload | string;
   }
+
 }
