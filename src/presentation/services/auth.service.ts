@@ -6,9 +6,37 @@ import {
   LoginUserDto,
   UserEntity,
 } from "../../domain";
+import { EmailService } from "./email.service";
+import { envs } from "../../config";
 
 export class AuthService {
-  constructor(private readonly jwtAdapter: JwtAdapter) {}
+  constructor(
+    private readonly jwtAdapter: JwtAdapter,
+    private readonly emailService: EmailService
+  ) {}
+
+  private sendEmailValidationLink = async (email: string) => {
+    const token = await this.jwtAdapter.sign({ email });
+    if (!token) {
+      throw CustomError.internal("Internal server error");
+    }
+
+    const link = `${envs.HOST}/api/auth/validate-email/${token}`;
+    const html = `<a href="${link}">Click here to validate your email</a>`;
+    const subject = "Email validation link";
+
+    const emailSent = await this.emailService.sendEmail({
+      to: email,
+      subject,
+      htmlBody: html,
+    });
+
+    if (!emailSent) {
+      throw CustomError.internal("Internal server error");
+    }
+
+    return true;
+  };
 
   public async registerUser(registerUserDto: RegisterUserDto) {
     const userExists = await UserModel.findOne({
@@ -24,6 +52,9 @@ export class AuthService {
       user.password = bcryptAdapter.hash(user.password);
 
       await user.save();
+
+      await this.sendEmailValidationLink(user.email);
+
       const { password: _, ...useEntity } = UserEntity.fromObject(user);
       const token = await this.jwtAdapter.sign({ id: user.id });
 
@@ -61,4 +92,41 @@ export class AuthService {
       token,
     };
   }
+
+  public validateEmail = async (token: string) => {
+    const jwtPayload = this.jwtAdapter.verify(token);
+    if (!jwtPayload) {
+      throw CustomError.badRequest("Invalid token");
+    }
+
+    if (typeof jwtPayload === 'string') {
+      throw CustomError.badRequest("Invalid token");
+    }
+
+    const email = jwtPayload.email;
+
+    if (!email) {
+      throw CustomError.badRequest("Invalid token");
+    }
+
+    const user = await UserModel.findOne({ email });
+    if (!user) {
+      throw CustomError.notFound("User not found");
+    }
+
+    user.emailValidated = true;
+    await user.save();
+
+    const { password: _, ...useEntity } = UserEntity.fromObject(user);
+    const newToken = await this.jwtAdapter.sign({ id: user.id });
+
+    if (!newToken) {
+      throw CustomError.internal("Internal server error");
+    }
+
+    return {
+      user: useEntity,
+      token: newToken,
+    };
+  };
 }

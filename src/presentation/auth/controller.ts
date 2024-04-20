@@ -28,6 +28,7 @@ export class AuthController {
       })
       .catch((error) => this.handleError(error, res));
   };
+
   login = (req: Request, res: Response) => {
     const [error, loginUserDto] = LoginUserDto.create(req.body);
 
@@ -46,9 +47,14 @@ export class AuthController {
       })
       .catch((error) => this.handleError(error, res));
   };
+
   validateEmail = (req: Request, res: Response) => {
     const { token } = req.params;
-    // do something with token
-    res.status(200).json({ message: "Email validated" });
+    this.authService
+      .validateEmail(token)
+      .then(({ user }) => {
+        res.status(200).json(user);
+      })
+      .catch((error) => this.handleError(error, res));
   };
 }
